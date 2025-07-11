@@ -1,6 +1,6 @@
 <?php
   session_start();
-    if (($_SESSION['rol'] < 1 OR $_SESSION['rol'] > 3))
+    if (($_SESSION['rol'] < 1 OR $_SESSION['rol'] > 4))
      {
         session_destroy();
         header('location: ../index.php');
@@ -56,11 +56,16 @@
                                 echo '<li class="nav-item"><a class="nav-link" href="javascript:formularioClave();">Cambiar contraseña</a></li>';
                             }
                              
-                            ?> 
-                            <li class="nav-item"><a class="nav-link" href="telefonos.php">Teléfonos</a></li>
-                            <li class="nav-item"><a class="nav-link" href="apple.php">Apple Original</a></li>
-                            <li class="nav-item"><a class="nav-link" href="oppo.php">Oppo Original</a></li>
-                            <li class="nav-item"><a class="nav-link" href="salir.php">Salir</a></li>
+                            if ($_SESSION['rol']<4)
+                            {
+                                echo '<li class="nav-item"><a class="nav-link" href="telefonos.php">Teléfonos</a></li>
+                                      <li class="nav-item"><a class="nav-link" href="apple.php">Apple Original</a></li>
+                                      <li class="nav-item"><a class="nav-link" href="oppo.php">Oppo Original</a></li>';
+                            }
+                            else
+                                echo '<li class="nav-item"><a class="nav-link" href="apple.php">Apple Original</a></li>';
+                            ?>
+                            <li class="nav-item"><a class="nav-link" href="salir.php">Salir</a></li> 
                         </ul>
                     </div >
                     <div id="sesionInfo" class="collapse navbar-collapse panel-footer justify-content-end">
@@ -81,7 +86,7 @@
                             <th>Etiqueta</th>
                             <th>PVP</th>
                             <?php
-                            if ($_SESSION['rol']!=3)
+                            if ($_SESSION['rol']<3)
                                 {
                                     echo '<th>PVP CLUB SAVE</TH>';
                                 }
@@ -241,7 +246,7 @@
                     } 
                 },
                 <?php
-                if ($_SESSION['rol']!=3)
+                if ($_SESSION['rol']<3)
                    echo '{"data": "pvp_clubsave", "width": "5%",
                          render: function (data,type,row)
                          {
@@ -253,7 +258,7 @@
                 "columnDefs":
                 [{
                     <?php
-                    if ($_SESSION['rol']==3)
+                    if ($_SESSION['rol']>=3)
                         echo 'targets: 6,';
                     else 
                         echo 'targets: 7,';
@@ -281,12 +286,10 @@
         $('#repuestos thead tr:eq(1) th').each( function (i) 
         {
             <?php
-                     if ($_SESSION['rol']==1)
+                     if ($_SESSION['rol']<=2)
                         echo 'if(i<7)';
-                     elseif ($_SESSION['rol']==3)
+                     elseif ($_SESSION['rol']>=3)
                         echo 'if(i<6)';
-                     elseif ($_SESSION['rol']==2)
-                        echo 'if(i<7)';
                     ?>
            { 
                 var titulo = $(this).text(); //es el nombre de la columna
