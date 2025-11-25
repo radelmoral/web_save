@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Pedidos tienda SAVE</title>
+    
+    <!-- React y ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel para JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- SheetJS para Excel Local -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        body { background-color: #f0f9ff; font-family: 'Segoe UI', sans-serif; }
+        .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Estilo para transiciones de altura (desplegable condicional) */
+        .slide-down { transition: all 0.3s ease-out; overflow: hidden; max-height: 0; opacity: 0; }
+        .slide-down.open { max-height: 100px; opacity: 1; margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- URL Webhook Por Defecto (Hardcoded) ---
+        const DEFAULT_WEBHOOK = "https://hook.eu1.make.com/ddkg9fddcnuagi1ape9l3lteuiuceyjv";
+
+        // --- Lista de Tiendas (Ordenada Alfabéticamente) ---
+        const TIENDAS = [
+            "ECI Alicante",
+            "ECI Bilbao",
+            "ECI Callao",
+            "ECI Castellana",
+            "ECI Diagonal",
+            "ECI Goya",
+            "ECI Las Palmas",
+            "ECI Malaga",
+            "ECI Marbella",
+            "ECI Murcia",
+            "ECI Pamplona",
+            "ECI Plaza Cataluña",
+            "ECI Pozuelo",
+            "ECI Princesa",
+            "ECI Sanchinarro",
+            "ECI Santander",
+            "ECI Sevilla",
+            "ECI Valencia",
+            "SAVE El Paseo",
+            "SAVE Fan Mallorca",
+            "SAVE General Ricardos",
+            "SAVE La Sierra"
+        ];
+        TIENDAS.sort();
+
+        const PROVEEDORES = ["GSMParts", "Ecommerce", "Stock red"];
+
+        // --- Iconos ---
+        const Icon = ({ children, className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>;
+        const Plus = ({ className }) => <Icon className={className}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></Icon>;
+        const Trash2 = ({ className }) => <Icon className={className}><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></Icon>;
+        const Cloud = ({ className }) => <Icon className={className}><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></Icon>;
+        const Save = ({ className }) => <Icon className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></Icon>;
+        const Settings = ({ className }) => <Icon className={className}><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></Icon>;
+        const Eye = ({ className }) => <Icon className={className}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></Icon>;
+
+        // Función auxiliar para Buffer
+        const blobToBuffer = (blob) => {
+            return new Promise((resolve, _) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64result = reader.result.split(',')[1];
+                    resolve(base64result);
+                };
+                reader.readAsDataURL(blob);
+            });
+        };
+
+        function App() {
+            const [items, setItems] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [showSettings, setShowSettings] = useState(false);
+            // Se usa localStorage si existe, si no, el valor por defecto proporcionado
+            const [webhookUrl, setWebhookUrl] = useState(localStorage.getItem('cloud_webhook_url') || DEFAULT_WEBHOOK);
+            
+            // Estado del formulario
+            const [formData, setFormData] = useState({ 
+                tienda: '', 
+                referencia: '', 
+                etiqueta: '', 
+                unidades: '', 
+                proveedorTipo: '', // GSMParts, Ecommerce, Stock red
+                proveedorStockTienda: '', // Tienda seleccionada si es Stock red
+                observaciones: ''
+            });
+
+            const handleConfigSave = (e) => {
+                e.preventDefault();
+                const url = e.target.url.value.trim();
+                setWebhookUrl(url);
+                localStorage.setItem('cloud_webhook_url', url);
+                setShowSettings(false);
+                alert("✅ URL de Webhook guardada.");
+            };
+
+            const handleAddItem = (e) => {
+                e.preventDefault();
+                if (!formData.tienda) return alert("Por favor, selecciona la TIENDA DE ORIGEN.");
+                if (!formData.proveedorTipo) return alert("Selecciona un PROVEEDOR.");
+                if (formData.proveedorTipo === 'Stock red' && !formData.proveedorStockTienda) return alert("Si es Stock de Red, debes indicar de QUÉ TIENDA viene.");
+                if (!formData.referencia || !formData.unidades) return alert("Faltan datos básicos (Referencia o Unidades).");
+                
+                // Construir el string final del proveedor
+                let proveedorFinal = formData.proveedorTipo;
+                if (formData.proveedorTipo === 'Stock red') {
+                    proveedorFinal = `Stock red - ${formData.proveedorStockTienda}`;
+                }
+
+                const newItem = {
+                    id: Date.now(),
+                    tienda: formData.tienda,
+                    referencia: formData.referencia,
+                    etiqueta: formData.etiqueta,
+                    unidades: formData.unidades,
+                    proveedor: proveedorFinal, // Guardamos el string compuesto
+                    observaciones: formData.observaciones
+                };
+
+                setItems(prev => [...prev, newItem]);
+                
+                // Limpieza inteligente del formulario
+                setFormData(prev => ({ 
+                    ...prev, 
+                    referencia: '', 
+                    etiqueta: '', 
+                    unidades: '',
+                    observaciones: ''
+                    // Mantenemos tienda y proveedor para agilizar la entrada masiva
+                }));
+                document.getElementById('referencia').focus();
+            };
+
+            const handleDeleteItem = (id) => setItems(prev => prev.filter(item => item.id !== id));
+
+            const handleProcess = async () => {
+                if (items.length === 0) return alert("El pedido está vacío.");
+                if (!webhookUrl) {
+                    alert("⚠️ Falta configurar el Webhook.\nAbre los ajustes (engranaje).");
+                    return setShowSettings(true);
+                }
+
+                setLoading(true);
+
+                try {
+                    // 1. Enviar DATOS al Webhook
+                    const payload = {
+                        fecha_envio: new Date().toLocaleDateString('es-ES'),
+                        hora_envio: new Date().toLocaleTimeString('es-ES'),
+                        total_lineas: items.length,
+                        items: items
+                    };
+
+                    await fetch(webhookUrl, {
+                        method: 'POST',
+                        body: JSON.stringify(payload),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    alert("✅ ¡Datos enviados correctamente a la nube!");
+                    
+                    // 2. Copia Local Excel
+                    const wsData = items.map(item => ({ 
+                        "Tienda Origen": item.tienda,
+                        "Referencia": item.referencia, 
+                        "Etiqueta": item.etiqueta, 
+                        "Unidades": Number(item.unidades), 
+                        "Proveedor": item.proveedor,
+                        "Observaciones": item.observaciones
+                    }));
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.json_to_sheet(wsData);
+                    // Ajustar anchos de columna
+                    ws['!cols'] = [{wch: 20}, {wch: 15}, {wch: 30}, {wch: 8}, {wch: 25}, {wch: 40}];
+                    XLSX.utils.book_append_sheet(wb, ws, "Pedido");
+                    XLSX.writeFile(wb, `Copia_Local_Pedido_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+                    if(confirm("¿Limpiar lista para el siguiente pedido?")) setItems([]);
+
+                } catch (error) {
+                    console.error("Error envío:", error);
+                    alert("❌ Error de conexión: " + error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col items-center py-10 px-4">
+                    {/* Modal Ajustes */}
+                    {showSettings && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
+                            <div className="bg-white p-6 rounded-xl shadow-2xl max-w-md w-full">
+                                <h3 className="text-xl font-bold mb-4 flex items-center text-blue-700"><Settings className="mr-2"/> Conexión Make (OneDrive)</h3>
+                                <form onSubmit={handleConfigSave} className="space-y-3">
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-600">Webhook URL</label>
+                                        <input name="url" defaultValue={webhookUrl} placeholder="https://hook.eu1.make.com/..." className="w-full border p-2 rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none"/>
+                                    </div>
+                                    <div className="flex justify-end pt-4 space-x-2">
+                                        <button type="button" onClick={() => setShowSettings(false)} className="px-3 py-2 text-gray-500 hover:bg-gray-100 rounded text-sm">Cerrar</button>
+                                        <button type="submit" className="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 font-bold">Guardar</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Cabecera */}
+                    <div className="max-w-6xl w-full bg-white rounded-xl shadow-lg mb-6 overflow-hidden border-b-4 border-blue-500">
+                        <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-6 flex justify-between items-center text-white">
+                            <div className="flex items-center">
+                                {/* LOGO SAVE: Nombre actualizado a 'logo save.jpg' */}
+                                <img 
+                                    src="../img/logo-save.svg" 
+                                    alt="Logo SAVE" 
+                                    className="h-12 w-auto mr-4 rounded-md object-contain bg-white p-1 shadow-sm"
+                                    onError={(e) => {e.target.onerror = null; e.target.style.display = 'none';}} // Ocultar si falla
+                                />
+                                <div>
+                                    <h1 className="text-2xl font-bold">Gestion Pedidos tienda SAVE</h1>
+                                </div>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                                <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-white/20 rounded-full transition" title="Configurar Nube">
+                                    <Settings className={`h-6 w-6 ${!webhookUrl ? 'animate-pulse text-yellow-300' : 'text-white'}`} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Panel Izquierdo: Formulario */}
+                        <div className="lg:col-span-1 space-y-6">
+                            <div className="bg-white rounded-xl shadow-md p-6">
+                                <h2 className="font-semibold mb-4 flex items-center text-gray-800"><Plus className="h-5 w-5 mr-2 text-blue-600"/> Añadir Producto</h2>
+                                <form onSubmit={handleAddItem} className="space-y-4">
+                                    
+                                    {/* Campo Tienda (Ordenada) */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 mb-1 ml-1">TIENDA QUE PIDE (ORIGEN)</label>
+                                        <div className="relative">
+                                            <select 
+                                                name="tienda" 
+                                                value={formData.tienda} 
+                                                onChange={(e)=>setFormData({...formData, tienda: e.target.value})} 
+                                                className="w-full border p-2 pl-3 rounded outline-none focus:ring-2 focus:ring-blue-500 transition bg-blue-50 text-blue-900 font-bold appearance-none"
+                                            >
+                                                <option value="">-- Selecciona tu Tienda --</option>
+                                                {TIENDAS.map(tienda => (
+                                                    <option key={tienda} value={tienda}>{tienda}</option>
+                                                ))}
+                                            </select>
+                                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Proveedor + Stock Red Lógica (MOVIDO AQUÍ) */}
+                                    <div className="bg-gray-50 p-3 rounded border border-gray-200">
+                                        <label className="block text-xs font-bold text-gray-500 mb-1 ml-1">PROVEEDOR</label>
+                                        <select 
+                                            value={formData.proveedorTipo} 
+                                            onChange={(e)=>setFormData({...formData, proveedorTipo: e.target.value, proveedorStockTienda: ''})} 
+                                            className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500 bg-white mb-1"
+                                        >
+                                            <option value="">-- Selecciona Proveedor --</option>
+                                            {PROVEEDORES.map(p => <option key={p} value={p}>{p}</option>)}
+                                        </select>
+
+                                        {/* Segundo desplegable condicional */}
+                                        <div className={`slide-down ${formData.proveedorTipo === 'Stock red' ? 'open' : ''}`}>
+                                            <label className="block text-xs font-bold text-red-500 mb-1 ml-1 mt-2">¿De qué tienda viene el stock?</label>
+                                            <select 
+                                                value={formData.proveedorStockTienda} 
+                                                onChange={(e)=>setFormData({...formData, proveedorStockTienda: e.target.value})} 
+                                                className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-red-500 bg-white border-red-200"
+                                            >
+                                                <option value="">-- Selecciona Tienda de la Red --</option>
+                                                {TIENDAS.map(tienda => (
+                                                    <option key={tienda} value={tienda}>{tienda}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <input name="referencia" value={formData.referencia} onChange={(e)=>setFormData({...formData, referencia: e.target.value})} id="referencia" className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="Referencia" />
+                                    <input name="etiqueta" value={formData.etiqueta} onChange={(e)=>setFormData({...formData, etiqueta: e.target.value})} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="Descripción / Etiqueta" />
+                                    <input type="number" name="unidades" value={formData.unidades} onChange={(e)=>setFormData({...formData, unidades: e.target.value})} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="Unidades" />
+
+                                    {/* Observaciones */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 mb-1 ml-1">OBSERVACIONES</label>
+                                        <textarea 
+                                            name="observaciones" 
+                                            value={formData.observaciones} 
+                                            onChange={(e)=>setFormData({...formData, observaciones: e.target.value})} 
+                                            className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500 transition h-20 text-sm resize-none" 
+                                            placeholder="Notas adicionales..." 
+                                        />
+                                    </div>
+
+                                    <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-bold shadow transition transform active:scale-95 flex justify-center items-center">
+                                        <Plus className="mr-2 h-5 w-5"/> Añadir a lista
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            {/* Estado Conexión */}
+                            <div className={`rounded-xl shadow-md p-4 border ${webhookUrl ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                                <h3 className={`text-sm font-bold flex items-center ${webhookUrl ? 'text-green-800' : 'text-red-800'}`}>
+                                    {webhookUrl ? <Cloud className="h-4 w-4 mr-2"/> : <Settings className="h-4 w-4 mr-2"/>}
+                                    {webhookUrl ? 'Conectado a la Nube' : 'Sin Conexión'}
+                                </h3>
+                            </div>
+                        </div>
+
+                        {/* Panel Derecho: Tabla */}
+                        <div className="lg:col-span-2 flex flex-col bg-white rounded-xl shadow-md overflow-hidden">
+                            <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                                <h2 className="font-semibold flex items-center text-gray-700">Resumen <span className="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">{items.length}</span></h2>
+                            </div>
+                            <div className="flex-grow overflow-auto p-0 min-h-[400px]">
+                                {items.length === 0 ? <div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-50"><Cloud className="h-16 w-16 mb-2"/>Lista vacía</div> : 
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50 sticky top-0 z-10">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left text-xs text-gray-500 font-bold uppercase">Origen</th>
+                                                <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">Producto</th>
+                                                <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">Prov.</th>
+                                                <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">Obs.</th>
+                                                <th className="px-4 py-3 uppercase text-xs text-gray-500">Uds</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y">{items.map(item => (
+                                            <tr key={item.id} className="hover:bg-gray-50 group">
+                                                <td className="px-4 py-3 text-xs font-bold text-blue-800 bg-blue-50/30 whitespace-nowrap">{item.tienda}</td>
+                                                <td className="px-4 py-3">
+                                                    <div className="text-sm font-medium text-gray-900">{item.referencia}</div>
+                                                    <div className="text-xs text-gray-500 truncate max-w-[150px]">{item.etiqueta}</div>
+                                                </td>
+                                                <td className="px-4 py-3 text-xs">
+                                                    <span className={`px-2 py-1 rounded-full font-semibold ${item.proveedor.startsWith('Stock red') ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>
+                                                        {item.proveedor}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-xs text-gray-500 italic max-w-[150px] truncate" title={item.observaciones}>
+                                                    {item.observaciones || '-'}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm font-bold text-center">{item.unidades}</td>
+                                                <td className="px-4 text-right">
+                                                    <button onClick={()=>handleDeleteItem(item.id)} className="text-red-300 hover:text-red-600 transition p-1 rounded-full hover:bg-red-50"><Trash2 className="h-4 w-4"/></button>
+                                                </td>
+                                            </tr>
+                                        ))}</tbody>
+                                    </table>
+                                }
+                            </div>
+                            <div className="p-4 bg-gray-50 border-t">
+                                <button onClick={handleProcess} disabled={items.length===0 || loading} className={`w-full flex items-center justify-center px-6 py-4 rounded-lg font-bold text-white shadow-lg transition transform active:scale-95 ${items.length===0 ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}>
+                                    {loading ? "Sincronizando..." : <span className="flex items-center"><Save className="mr-2 h-5 w-5"/> Enviar pedido</span>}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

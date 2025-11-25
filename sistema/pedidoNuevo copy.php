@@ -11,7 +11,7 @@
 <html lang="en" dir="ltr">
     <head>
         <meta charset="utf-8">
-        <title>SAVE gestión usuarios</title>
+        <title>SAVE gestión Pedidos</title>
         <link rel="icon" type="image/x-icon" href="../img/save.ico">
 
         <link rel="stylesheet" href="../css/bootstrap.min.css">
@@ -43,11 +43,7 @@
                     </a>
                     <div id="MenuNavegacion" class="collapse navbar-collapse">
                         <ul class="navbar-nav ms-3">
-                            <li class="nav-item"><a class="nav-link" href="javascript:formularioUsuario();">Añadir usuario</a></li>
-                            <li class="nav-item"><a class="nav-link" href="repuestos.php">Repuestos</a></li>
-                            <li class="nav-item"><a class="nav-link" href="telefonos.php">Teléfonos</a></li>
-                            <li class="nav-item"><a class="nav-link" href="apple.php">Apple Original</a></li>
-                            <li class="nav-item"><a class="nav-link" href="oppo.php">Oppo Original</a></li>
+                            <li class="nav-item"><a class="nav-link" href="pedidos.php">Volver</a></li>
                             <li class="nav-item"><a class="nav-link" href="salir.php">Salir</a></li>
                         </ul>
                     </div >
@@ -57,30 +53,57 @@
                 </div>
             </nav> 
 
-            <h1>Listado Usuario</h1>
+            <h1>Pedido nuevo</h1>
+            <div class="container-fluid">
+                <div class="row mb-4">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="tienda" class="col-4 col-form-label">Tienda:</label>
+                            <div class="col-6">
+                                <select class="form-select " id="tienda">
+                                    <!-- se rellena con AJAX -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="tienda" class="col-4 col-form-label">Tienda:</label>
+                            <div class="col-6">
+                                <select class="form-select " id="origen">
+
+                                    <option value="1">Elegir origen</option>
+                                    <option value="2">Company 2</option>
+                                    <option value="3">Company 3</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="col-12">
-                <table class="table table-striped table-bordered table-hover" id="usuarios">
+                <table class="table table-striped table-bordered table-hover" id="referencias">
                     <thead >
                         <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Usuario</th>
-                            <th>email</th>
-                            <th>rol</th>
-                    <!--    <th>clave</th>  -->
+                            <th>Referencia</th>
+                            <th>Etiqueta</th>
+                            <th>Uds.</th>
+                            <th>En tienda</th>
+                            <th>Depósito</th>
+                            <th>Comentarios</th>
                             <th>Opciones</th>
                         </tr>
                     </thead>
                 </table>
             </div>
 
-            <!-- Formulario para agregar usuarios -->
-            <div class="modal fade" id="formularioUsuario" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog"> 
+            <!-- Formulario para agregar referencia -->
+            <div class="modal fade" id="formularioReferencia" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog"> 
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
                     <div class="modal-header bg-info bg-gradient d-flex justify-content-between align-items-center">
                             <h3 class="modal-title" style="text-align: center;" id="cabecera">
-                                Usuarios
+                                Nueva Referencia
                             </h3>
                             <button type="button" class="btn btn-sm btn-danger float-right" data-bs-dismiss="modal" ><i class="bi bi-x-square"></i></button>
                         </div>
@@ -88,32 +111,32 @@
                             <input type="hidden" id="id">
                             <div class="form-row">
                                 <div class="form-group col-md-12">
-                                    <label>Nombre:</label>
-                                    <input type="text" id="nombre" class="form-control" placeholder="">
+                                    <label>Referencia:</label>
+                                    <input type="text" id="referencia" class="form-control" placeholder="*">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group col-md-12">
-                                    <label>Usuario:</label>
-                                    <input type="text" id="usuario" class="form-control" placeholder="">
+                                    <label>Etiqueta:</label>
+                                    <input type="text" id="etiqueta" class="form-control" placeholder="*">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group col-md-12">
-                                    <label>email:</label>
-                                    <input type="text" id="email" class="form-control" placeholder="">
+                                    <label>Unidades:</label>
+                                    <input type="text" id="unidades" class="form-control" placeholder="*">
                                 </div>
                             </div>
                             <div class="form-row">
-                                <div class="form-group col-md-12">
-                                    <label>Contraseña:</label>
-                                    <input type="text" id="clave" class="form-control" placeholder="">
+                                <div class="form-check">
+                                    <input type="checkbox" id="enTienda" class="form-check-input" placeholder="">
+                                    <label class="form-check-label" for="enTienda">En tienda:</label>
                                 </div>
                             </div> 
                             <div class="form-row">
-                                <div class="form-group col-md-12">
-                                    <label>Rol:</label>
-                                    <input type="number" min="1" max="4" id="rol" class="form-control" placeholder="">
+                                 <div class="form-check">
+                                    <input type="checkbox" id="fianza" class="form-check-input" placeholder="">
+                                    <label class="form-check-label" for="fianza">En tienda:</label>
                                 </div>
                             </div>
                         </div>
@@ -150,25 +173,55 @@
             let tabla2=$("#usuarios").DataTable
             ({  orderCellsTop:true,
                 fixedHeader: true,
-                "dom":"lrtip",
+                dom:"lrtip",
 
-                "ajax":
-                    {
-                        url: "datosUsuarios.php?accion=listar",
-                        dataSrc: "" 
+               columns:
+                    [{data: "referencia"},
+                    {data: "etiqueta"},
+                    {data: "unidades"},
+                    {data: "enTienda"},
+                    {data: "deposito"},
+                    {data: "comentarios", 
+                     orderable: false,
+                     render:function(data, type, row)
+                        {
+                            return data.length > 20 ? data.substr(0,20) + "...":data;
+                        }
                     },
-                "columns":
-                [{"data": "id_usuario", "className": "text-center", "width":"5%"},
-                 {"data": "nombre"},
-                 {"data": "usuario"},
-                {"data": "email"},
-                //{"data": "clave"},
-                {"data": "rol" },
-                {"data": null,"orderable": false}],
-                "columnDefs":
-                [{
-                    targets: 5,
-                    "defaultContent":
+                    {data: null,
+                        defaultContent:
+                            '<div class="action-buttons">' +
+                                '<span class="edit"><i class="bi bi-pencil"></i></span> ' +
+                                '<span class="remove"><i class="bi bi-trash"></i></span> ' +
+                                '<span class="cancel"></span>' +
+                            '</div>',
+                        className: 'row-edit dt-center',
+                    orderable: false}],
+                    
+                columnDefs:
+                    [{
+                        targets:0,
+                        width:"10%"
+                    },
+                    {   
+                        targets:1,
+                        width:"10%"
+                    },
+                    {   
+                        targets:2,
+                        width:"5%"   
+                    },
+                    {   
+                        targets:3,
+                        width:"5%"   
+                    },
+                    {   
+                        targets:4,
+                        width:"5%"   
+                    }
+                   /* {
+                    targets: 6,
+                    defaultContent:
                     '<div className="space-x-2">' +
                     '<button class="btn btn-sm btn-primary botonModificar"><i class="bi bi-pencil"></i></buuton>' +
                     '<button class="btn btn-sm btn-danger botonBorrar"><i class="bi bi-trash-fill"></i></buuton>' +
@@ -176,104 +229,81 @@
                     className: 'row-edit dt-center',
                     orderable: false,
                     data: null
-                }],
-                "language":
+                    width:"5%"
+                    }*/],
+                language:
                 {
                     "url": "../js/spanish.json",
                 }       
             });
 
         
-        //Creamos una fila en el head de la tabla y lo clonamos para cada columna
-        $('#usuarios thead tr').clone(true).appendTo( '#usuarios thead' );
-
-         $('#usuarios thead tr:eq(1) th').each( function (i) 
-        {
-            if(i<5)
-           { 
-                var titulo = $(this).text(); //es el nombre de la columna
-                $(this).html( '<input type="text" placeholder="Buscar...'+titulo+'" />' );
-
-                $( 'input', this ).on( 'keyup change', function () 
-                {
-                    if ( tabla2.column(i).search() !== this.value ) 
-                        {
-                            tabla2
-                            .column(i)
-                            .search( this.value )
-                            .draw();
-                        }
-                });
-            }     
-        });    
-
-
-                     
         // Eventos que interactuan con el formulario de entrada
 
-        function formularioUsuario()
+        function formularioReferencia()
             {
                 $("#confirmarAgregar").show();
                 $("#confirmarModificar").hide();
                 limpiarFormulario();
-                document.getElementById("cabecera").innerText = "Nuevo usuario";
-                $("#formularioUsuario").modal('show');
+                document.getElementById("cabecera").innerText = "Nueva referencia";
+                $("#formularioReferencia").modal('show');
             }
         
         function limpiarFormulario()
             {
-                $('#id').val('');
-                $('#nombre').val('');
-                $('#usuario').val ('');
-                $('#email').val('');
-                $('#clave').val('');
-                $('#rol').val('');
+                $('#referencia').val('');
+                $('#unidades').val('');
+                $('#etiqueta').val ('');
+                $('enTienda').removeAttr("checked");
+                $('#deposito').removeAttr("checked");
+                $('#comentarios').val('');
             } 
 
         
         $('#confirmarAgregar').click(function()
             {
                 let registro = recuperarDatosFormulario();
-                if(registro.usuario == '')
+                if(registro.referencia == '')
                    {
-                    alert ("El nombre de usuario no puede estar vacio");
+                    alert ("La referencia no puede estar vacia");
                     return;
                    }
-                if(registro.clave == '')
+                if(registro.etiqueta == '')
                    {
-                    alert ("La no puede estar vacia");
+                    alert ("La Etiqueta no puede estar vacia");
                     return;
                    } 
+                if(registro.unidades == '')
+                    {
+                    alert ("Las unidades no puede estar vacias");
+                    return;
+                    } 
                 
-                $("#formularioUsuario").modal('hide');
+                $("#formularioReferencia").modal('hide');
                 agregarRegistro(registro);
             });
 
         $('#confirmarModificar').click(function()
             {
-                $("#formularioUsuario").modal('hide');
+                $("#formularioReferencia").modal('hide');
                 let registro = recuperarDatosFormulario();
-                modificarUsuario(registro);   
+                modificarReferencia(registro);   
             });  
 
-        $('#usuarios tbody').on('click',"button.botonBorrar", function()
+        $('#referencias tbody').on('click',"button.botonBorrar", function()
             {
-                let registro = tabla2.row($(this).parents('tr')).data();
-                let mensaje = 'Seguro que desea eliminar a:\n\n' + registro.nombre ;
-                if(confirm(mensaje))
-                {
-                    
-                    borrarRegistro(registro.id_usuario);
-                } 
+                table
+                .row($(this).parents('tr'))
+                .remove()
+                .draw();
+            });
 
-            })
-
-            $('#usuarios tbody').on('click',"button.botonModificar", function()
+        $('#referencias tbody').on('click',"button.botonModificar", function()
             {
                 $("#confirmarAgregar").hide();
                 $("#confirmarModificar").show();
                 let registro = tabla2.row($(this).parents('tr')).data();
-                document.getElementById("cabecera").innerText = "Modificar usuario";
+                document.getElementById("cabecera").innerText = "Modificar referencia";
                 recuperarRegistro(registro.id_usuario);
                 
             })
@@ -332,23 +362,20 @@
             });
         }
         
-        function recuperarRegistro(id)
+        function listarTiendas()
         {
             $.ajax(
                 {
                     type: "GET",
-                    url: "datosUsuarios.php?accion=consultar&id=" + id,
+                    url: "datosPedidos.php?accion=listarTiendas,
                     data: '',
                     success: function(datos)
                    {
-                        $('#id').val(datos[0].id_usuario);
-                        $('#nombre').val(datos[0].nombre);
-                        $('#usuario').val(datos[0].usuario);
-                        $('#email').val(datos[0].email);
-                        $('#clave').val('');
-                        $('#rol').val(datos[0].rol);
-                        
-                        $("#formularioUsuario").modal('show');
+                        var len = datos.length:
+                        for (var i=0;i<len; i++)
+                        {
+                            $('#tienda').append('<option value="'+ datos[i].idTienda + '">') + datos[i].tienda + '</optio>');
+                        }
                    },
                    error: function()
                   {

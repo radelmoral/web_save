@@ -113,7 +113,7 @@
                             <div class="form-row">
                                 <div class="form-group col-md-12">
                                     <label>Rol:</label>
-                                    <input type="number" min="1" max="4" id="rol" class="form-control" placeholder="">
+                                    <input type="number" min="1" max="3" id="rol" class="form-control" placeholder="">
                                 </div>
                             </div>
                         </div>

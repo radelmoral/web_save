@@ -1,6 +1,6 @@
 <?php
   session_start();
-    if (($_SESSION['rol'] < 1 OR $_SESSION['rol'] > 4))
+    if (($_SESSION['rol'] < 1 OR $_SESSION['rol'] > 3))
      {
         session_destroy();
         header('location: ../index.php');
@@ -31,7 +31,7 @@
 
     </head>
     <body>
-        <div class="container-fluid">
+        <div class="container">
             <input type="hidden" id="rol_sesion" value="<?php echo $_SESSION['rol']?>"> 
             <!-- barra de navegacion -->
             <nav class="navbar navbar-expand-md" style="background-color: #e3f2fd;">
@@ -56,17 +56,11 @@
                                 echo '<li class="nav-item"><a class="nav-link" href="javascript:formularioClave();">Cambiar contraseña</a></li>';
                             }
                              
-                            if ($_SESSION['rol']<4)
-                            {
-                                echo '<li class="nav-item"><a class="nav-link" href="telefonos.php">Teléfonos</a></li>
-                                      <li class="nav-item"><a class="nav-link" href="apple.php">Apple Original</a></li>
-                                      <li class="nav-item"><a class="nav-link" href="oppo.php">Oppo Original</a></li>
-                                      <li class="nav-item"><a class="nav-link" href="Pedidos.html" target="_blank" rel="nooper noreferrer">Pedidos</a></li>';
-                            }
-                            else
-                                echo '<li class="nav-item"><a class="nav-link" href="apple.php">Apple Original</a></li>';
                             ?>
-                            <li class="nav-item"><a class="nav-link" href="salir.php">Salir</a></li> 
+                            <li class="nav-item"><a class="nav-link" href="repuestos.php">Repuestos</a></li> 
+                            <li class="nav-item"><a class="nav-link" href="telefonos.php">Teléfonos</a></li>
+                            <li class="nav-item"><a class="nav-link" href="oppo.php">Oppo Original</a></li>
+                            <li class="nav-item"><a class="nav-link" href="salir.php">Salir</a></li>
                         </ul>
                     </div >
                     <div id="sesionInfo" class="collapse navbar-collapse panel-footer justify-content-end">
@@ -75,7 +69,7 @@
                 </div>
             </nav> 
 
-            <h1>Listado Repuestos general</h1>
+            <h1>Listado Apple Original</h1>
             <div class="col-12">
                 <table class="table table-striped table-bordered table-hover" id="repuestos">
                     <thead >
@@ -86,13 +80,7 @@
                             <th>Modelo</th>
                             <th>Etiqueta</th>
                             <th>PVP</th>
-                            <?php
-                            if ($_SESSION['rol']<3)
-                                {
-                                    echo '<th>PVP CLUB SAVE</TH>';
-                                }
-                            ?>
-                             <th>Opciones</th>
+                            <th>Opciones</th>
                         </tr>
                     </thead>
                 </table>
@@ -143,12 +131,6 @@
                                 <div class="form-group col-md-12">
                                     <label>P.V.P.:</label>
                                     <input step="0.01" min="0" type="number"  id="pvp" name="pvp" class="form-control" placeholder="">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group col-md-12">
-                                    <label>P.V.P. Club SAVE:</label>
-                                    <input step="0.01" min="0" type="number"  id="pvp_clubsave" name="pvp_clubsave" class="form-control" placeholder="">
                                 </div>
                             </div>
                         </div>
@@ -231,7 +213,7 @@
 
                 "ajax":
                     {
-                        url: "datosRepuestos.php?accion=listar",
+                        url: "datosApple.php?accion=listar",
                         dataSrc: "" 
                     },
                 "columns":
@@ -246,34 +228,21 @@
                         return data + ' €';
                     } 
                 },
-                <?php
-                if ($_SESSION['rol']<3)
-                   echo '{"data": "pvp_clubsave", "width": "5%",
-                         render: function (data,type,row)
-                         {
-                            return data + \' €\';
-                         } 
-                        },'
-                ?>
-               {"data": null,"orderable": false}],
+                {"data": null,"orderable": false}],
                 "columnDefs":
                 [{
-                    <?php
-                    if ($_SESSION['rol']>=3)
-                        echo 'targets: 6,';
-                    else 
-                        echo 'targets: 7,';
-                    ?>
+                    targets: 6,
                     "defaultContent": ($('#rol_sesion').val()==1) ? //solo los administradores les salen los botones
                     '<div className="space-x-2">' +
+                    //'<button class="btn btn-sm btn-primary botonModificar"><i class="fa-solid fa-pencil"></i></buuton>' +
+                    //'<button class="btn btn-sm btn-danger botonBorrar"><i class="fa-solid fa-trash-can"></i></buuton>' +
                     '<button class="btn btn-sm btn-primary botonModificar"><i class="bi bi-pencil"></i></buuton>' +
                     '<button class="btn btn-sm btn-danger botonBorrar"><i class="bi bi-trash-fill"></i></buuton>' +
                     '</div>' : '',
                     className: 'row-edit dt-center',
                     orderable: false,
                     data: null
-                }],   
-                
+                }],
                 "language":
                 {
                     "url": "../js/spanish.json",
@@ -286,15 +255,10 @@
 
         $('#repuestos thead tr:eq(1) th').each( function (i) 
         {
-            <?php
-                     if ($_SESSION['rol']<=2)
-                        echo 'if(i<7)';
-                     elseif ($_SESSION['rol']>=3)
-                        echo 'if(i<6)';
-                    ?>
+            if(i<6)
            { 
                 var titulo = $(this).text(); //es el nombre de la columna
-                $(this).html( '<input type="text" placeholder="Buscar..." />' );
+                $(this).html( '<input type="text" placeholder="Buscar...'+titulo+'" />' );
 
                 $( 'input', this ).on( 'keyup change', function () 
                 {
@@ -321,7 +285,10 @@
                     
                     document.getElementById("cabecera").innerText = "Nueva referencia";
                     document.getElementById("referencia").disabled = false;
+                    document.getElementById("marca").disabled = true;
+                                
                     pvp.value=0;
+                    marca.value='Apple';
                     $("#formularioRepuesto").modal('show');
                 }
         
@@ -333,7 +300,6 @@
                     $('#modelo').val('');
                     $('#etiqueta').val('');
                     $('#pvp').val('');
-                    $('#pvp_clubsave').val('');
                 }
 
             function recuperarDatosFormulario()
@@ -345,8 +311,7 @@
                         marca: $('#marca').val(),
                         modelo: $('#modelo').val(),
                         etiqueta: $('#etiqueta').val(),
-                        pvp: $('#pvp').val(),
-                        pvp_clubsave: $('#pvp_clubsave').val()
+                        pvp: $('#pvp').val()
                     };
                     return registro;
                 }
@@ -358,7 +323,7 @@
                     $.ajax(    
                     {
                         type: 'POST',
-                        url: "datosRepuestos.php?accion=agregar",
+                        url: "datosApple.php?accion=agregar",
                         data: registro,
                         success: function(msg)
                         {
@@ -377,7 +342,7 @@
                     $.ajax(    
                     {
                         type: 'GET',
-                        url: "datosRepuestos.php?accion=borrar&referencia=" + referencia,
+                        url: "datosApple.php?accion=borrar&referencia=" + referencia,
                         data: '',
                         success: function(msg)
                         {
@@ -395,7 +360,7 @@
                     $.ajax(
                         {
                             type: "GET",
-                            url: "datosRepuestos.php?accion=consultar&referencia="+referencia,
+                            url: "datosApple.php?accion=consultar&referencia="+referencia,
                             data: '',
                             success: function(datos)
                             {
@@ -406,9 +371,10 @@
                                 $('#modelo').val(datos[0].modelo);
                                 $('#etiqueta').val(datos[0].etiqueta);
                                 $('#pvp').val(datos[0].pvp);
-                                $('#pvp_clubsave').val(datos[0].pvp_clubsave);
                                 
                                 document.getElementById("referencia").disabled = true;
+                                document.getElementById("marca").disabled = true;
+                                
                                 $("#formularioRepuesto").modal('show');
                             },
                             error: function()
@@ -423,7 +389,7 @@
                     $.ajax(
                         {
                             type: "POST",
-                            url: "datosRepuestos.php?accion=modificar&referencia=" + registro.referencia,
+                            url: "datosApple.php?accion=modificar&referencia=" + registro.referencia,
                             data: registro,
                             
                             success: function(msg)
@@ -470,11 +436,7 @@
                     if(registro.pvp == '')
                     {
                         registro.pvp=0;
-                    }
-                    if(registro.pvp_clubsave == '')
-                    {
-                        registro.pvp_clubsave=0;
-                    }  
+                    } 
                     
                     $("#formularioRepuesto").modal('hide');
                     agregarRegistro(registro);
@@ -511,11 +473,7 @@
                     if(registro.pvp == '')
                     {
                         registro.pvp=0;
-                    }
-                    if(registro.pvp_clubsave == '')
-                    {
-                        registro.pvp_clubsave=0;
-                    }  
+                    } 
 
                     $("#formularioRepuesto").modal('hide');
                     modificarRepuesto(registro);   

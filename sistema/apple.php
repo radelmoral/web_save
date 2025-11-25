@@ -1,6 +1,6 @@
 <?php
   session_start();
-    if (($_SESSION['rol'] < 1 OR $_SESSION['rol'] > 3))
+    if (($_SESSION['rol'] < 1 OR $_SESSION['rol'] > 4))
      {
         session_destroy();
         header('location: ../index.php');
@@ -55,11 +55,15 @@
                             {
                                 echo '<li class="nav-item"><a class="nav-link" href="javascript:formularioClave();">Cambiar contraseña</a></li>';
                             }
-                             
+                            if ($_SESSION['rol']<4)
+                            {
+                                echo '<li class="nav-item"><a class="nav-link" href="repuestos.php">Repuestos</a></li>
+                                      <li class="nav-item"><a class="nav-link" href="telefonos.php">Teléfonos</a></li> 
+                                      <li class="nav-item"><a class="nav-link" href="oppo.php">Oppo Original</a></li>';
+                            }
+                            else
+                                echo '<li class="nav-item"><a class="nav-link" href="repuestos.php">Repuestos</a></li> ';
                             ?>
-                            <li class="nav-item"><a class="nav-link" href="repuestos.php">Repuestos</a></li> 
-                            <li class="nav-item"><a class="nav-link" href="telefonos.php">Teléfonos</a></li>
-                            <li class="nav-item"><a class="nav-link" href="oppo.php">Oppo Original</a></li>
                             <li class="nav-item"><a class="nav-link" href="salir.php">Salir</a></li>
                         </ul>
                     </div >
