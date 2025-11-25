@@ -1,7 +1,7 @@
 <?php
 function devolverConexion()
 {
-    $server="localhost:3306";
+    $server="webpvp_mariadb:3306";
     $usuario="save";
     $clave="46M1!!Jo57wU.aai";
     $base="Repuestos";
