@@ -60,12 +60,8 @@
                             {
                                 echo '<li class="nav-item"><a class="nav-link" href="telefonos.php">Teléfonos</a></li>
                                       <li class="nav-item"><a class="nav-link" href="apple.php">Apple Original</a></li>
-<<<<<<< HEAD
                                       <li class="nav-item"><a class="nav-link" href="oppo.php">Oppo Original</a></li>
                                       <li class="nav-item"><a class="nav-link" href="Pedidos.html" target="_blank" rel="nooper noreferrer">Pedidos</a></li>';
-=======
-                                      <li class="nav-item"><a class="nav-link" href="oppo.php">Oppo Original</a></li>';
->>>>>>> e0c03b92502ad8fe7d0ce33adb453b5a5654d255
                             }
                             else
                                 echo '<li class="nav-item"><a class="nav-link" href="apple.php">Apple Original</a></li>';
