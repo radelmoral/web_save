@@ -35,19 +35,19 @@
             const { useState, useEffect } = React;
 
             // --- Configuración Fija ---
-            const FIXED_WEBHOOK_URL = "https://n8n-n8n.ajvss9.easypanel.host/webhook/recepcion-pedidos-save";
+            const FIXED_WEBHOOK_URL = "https://n8n-n8n.ajvss9.easypanel.host/webhook/pedidossave";
 
             // --- Listas ---
             const TIENDAS = [
                 "ECI Alicante", "ECI Bilbao", "ECI Callao", "ECI Castellana", "ECI Diagonal", 
-                "ECI Goya", "ECI Las Palmas", "ECI Malaga", "ECI Marbella", "ECI Murcia", 
+                "ECI Goya", "ECI Las Palmas", "ECI Malaga", "ECI Mallorca" "ECI Marbella", "ECI Murcia", 
                 "ECI Pamplona", "ECI Plaza Cataluña", "ECI Pozuelo", "ECI Princesa", 
                 "ECI Sanchinarro", "ECI Santander", "ECI Sevilla", "ECI Valencia", 
-                "SAVE El Paseo", "SAVE Fan Mallorca", "SAVE General Ricardos", "SAVE La Sierra"
+                "SAVE El Paseo", "SAVE Fan Mallorca", "SAVE General Ricardos", "SAVE La Sierra", "SaveLab"
             ];
             TIENDAS.sort();
 
-            const PROVEEDORES = ["GSMParts", "Ecommerce", "Stock red"];
+            const PROVEEDORES = ["GSMParts", "Ecommerce", "Stock red", "Precios Adictos"];
 
             // --- Iconos ---
             const Icon = ({ children, className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>;
