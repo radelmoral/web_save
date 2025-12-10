@@ -23,9 +23,6 @@
         .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
         .slide-down { transition: all 0.3s ease-out; overflow: hidden; max-height: 0; opacity: 0; }
         .slide-down.open { max-height: 100px; opacity: 1; margin-top: 0.5rem; }
-        /* Toggle Switch Styles */
-        .toggle-checkbox:checked { right: 0; border-color: #68D391; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #68D391; }
     </style>
 </head>
 <body>
@@ -39,6 +36,7 @@
 
             // --- Configuración Fija ---
             const FIXED_WEBHOOK_URL = "https://n8n-n8n.ajvss9.easypanel.host/webhook/pedidossave";
+            const SETTINGS_PASSWORD = "S@ve2025!"; // CONTRASEÑA ACTUALIZADA
 
             // --- Listas ---
             const TIENDAS = [
@@ -57,10 +55,12 @@
             const Plus = ({ className }) => <Icon className={className}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></Icon>;
             const Trash2 = ({ className }) => <Icon className={className}><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></Icon>;
             const Save = ({ className }) => <Icon className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></Icon>;
+            const Settings = ({ className }) => <Icon className={className}><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></Icon>;
 
             function App() {
                 const [items, setItems] = useState([]);
                 const [loading, setLoading] = useState(false);
+                const [showSettings, setShowSettings] = useState(false);
                 const [statusLog, setStatusLog] = useState(""); 
                 
                 // Estado del formulario
@@ -69,15 +69,25 @@
                     referencia: '', 
                     etiqueta: '', 
                     unidades: '', 
-                    pvpReparacion: '', // Nuevo Campo
+                    pvpReparacion: '', 
                     proveedorTipo: '', 
                     proveedorStockTienda: '', 
                     observaciones: '',
                     esTerminalTienda: false,
-                    esDeposito15: false, // Cambiado de 30 a 15
+                    esDeposito15: false, 
                     numeroPresupuesto: '',
                     numeroFactura: ''
                 });
+
+                // Nueva función para manejar el acceso a ajustes con contraseña
+                const handleSettingsClick = () => {
+                    const password = prompt("Introduce la contraseña de administrador:");
+                    if (password === SETTINGS_PASSWORD) {
+                        setShowSettings(true);
+                    } else if (password !== null) { // Si no le dio a cancelar
+                        alert("Contraseña incorrecta.");
+                    }
+                };
 
                 const handleAddItem = (e) => {
                     e.preventDefault();
@@ -85,7 +95,7 @@
                     if (!formData.proveedorTipo) return alert("Falta: PROVEEDOR.");
                     if (formData.proveedorTipo === 'Stock red' && !formData.proveedorStockTienda) return alert("Falta: Tienda de procedencia del Stock.");
                     if (!formData.referencia || !formData.unidades) return alert("Faltan datos del producto.");
-                    if (!formData.pvpReparacion) return alert("Falta: PVP Reparación."); // Validación nuevo campo
+                    if (!formData.pvpReparacion) return alert("Falta: PVP Reparación."); 
                     
                     if (formData.esTerminalTienda && !formData.esDeposito15 && !formData.numeroPresupuesto) return alert("Indica el Nº de Presupuesto.");
                     if (formData.esDeposito15 && !formData.numeroFactura) return alert("Indica el Nº de Factura.");
@@ -98,11 +108,11 @@
                         referencia: formData.referencia,
                         etiqueta: formData.etiqueta,
                         unidades: formData.unidades,
-                        pvpReparacion: formData.pvpReparacion, // Nuevo Campo
+                        pvpReparacion: formData.pvpReparacion, 
                         proveedor: proveedorFinal, 
                         observaciones: formData.observaciones,
                         terminalTienda: formData.esTerminalTienda ? 'Sí' : 'No',
-                        deposito15: formData.esDeposito15 ? 'Sí' : 'No', // Cambiado de 30 a 15
+                        deposito15: formData.esDeposito15 ? 'Sí' : 'No', 
                         // Lógica de prioridad: Si hay depósito (o ambos), guardamos factura. Si solo terminal, presupuesto.
                         numeroPresupuesto: (formData.esTerminalTienda && !formData.esDeposito15) ? formData.numeroPresupuesto : '',
                         numeroFactura: formData.esDeposito15 ? formData.numeroFactura : ''
@@ -150,19 +160,14 @@
                         const payload = getPayload();
                         setStatusLog("Enviando datos al Servidor...");
                         
-                        // --- MÉTODO FORMULARIO OCULTO (BYPASS CORS) ---
-                        // Usamos un formulario real para enviar los datos, garantizando que
-                        // el navegador no bloquee la petición por ser cross-origin desde file://.
-                        // Los datos llegarán a n8n dentro del campo 'json_payload'.
-                        
                         const form = document.createElement('form');
                         form.method = 'POST';
                         form.action = FIXED_WEBHOOK_URL;
-                        form.target = 'hidden_iframe'; // Enviamos al iframe invisible
+                        form.target = 'hidden_iframe'; 
                         form.style.display = 'none';
 
                         const input = document.createElement('input');
-                        input.name = 'json_payload'; // La clave que n8n debe leer
+                        input.name = 'json_payload'; 
                         input.value = JSON.stringify(payload);
                         form.appendChild(input);
 
@@ -170,29 +175,26 @@
                         form.submit();
                         document.body.removeChild(form);
 
-                        // Simular tiempo de red y éxito (no podemos leer respuesta del iframe)
                         await new Promise(resolve => setTimeout(resolve, 1500));
 
                         setStatusLog("¡Datos enviados!");
 
-                        // Copia Local Excel
                         setStatusLog("Creando Excel local...");
                         const wsData = items.map(item => ({ 
                             "Tienda Origen": item.tienda,
                             "Referencia": item.referencia, 
                             "Etiqueta": item.etiqueta, 
                             "Unidades": Number(item.unidades), 
-                            "PVP Reparación": Number(item.pvpReparacion), // Nuevo Campo
+                            "PVP Reparación": Number(item.pvpReparacion), 
                             "Proveedor": item.proveedor,
                             "Terminal en Tienda": item.terminalTienda,
                             "Nº Presupuesto": item.numeroPresupuesto,
-                            "Depósito 15%": item.deposito15, // Cambiado de 30 a 15
+                            "Depósito 15%": item.deposito15, 
                             "Nº Factura": item.numeroFactura,
                             "Observaciones": item.observaciones
                         }));
                         const wb = XLSX.utils.book_new();
                         const ws = XLSX.utils.json_to_sheet(wsData);
-                        // Ajustar columnas
                         ws['!cols'] = [{wch: 20}, {wch: 15}, {wch: 30}, {wch: 8}, {wch: 12}, {wch: 25}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 30}];
                         XLSX.utils.book_append_sheet(wb, ws, "Pedido");
                         
@@ -200,7 +202,7 @@
                         XLSX.writeFile(wb, fileName);
 
                         setStatusLog("Finalizado.");
-                        alert("✅ ¡PEDIDO ENVIADO!\n\n1. Datos enviados al Servidor.\n2. Copia Excel descargada.\n\nIMPORTANTE: Recuerda actualizar el mapeo en n8n para el nuevo campo PVP y el Depósito 15%.");
+                        alert("✅ ¡PEDIDO ENVIADO!\n\n1. Datos enviados al Servidor.\n2. Copia Excel descargada.");
 
                         if(confirm("¿Deseas limpiar la lista?")) {
                             setItems([]);
@@ -219,6 +221,29 @@
                 return (
                     <div className="min-h-screen flex flex-col items-center py-10 px-4">
                         
+                        {/* Configuración Oculta */}
+                        {showSettings && (
+                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                                <div className="bg-white p-6 rounded-xl shadow-2xl max-w-md w-full">
+                                    <h3 className="text-xl font-bold mb-4 flex items-center text-blue-700"><Settings className="mr-2"/> Configuración Protegida</h3>
+                                    <div className="text-sm text-gray-600 mb-4 bg-yellow-50 p-3 rounded border border-yellow-200">
+                                        <strong>⚠️ Zona de Administrador</strong><br/>
+                                        Aquí puedes cambiar la URL del Webhook si cambia tu servidor.
+                                        La URL actual está fijada en el código, pero puedes sobreescribirla temporalmente aquí si es necesario.
+                                    </div>
+                                    <label className="text-xs font-bold text-gray-600">Webhook URL Actual</label>
+                                    <input 
+                                        defaultValue={FIXED_WEBHOOK_URL} 
+                                        className="w-full border p-2 rounded text-sm mb-4 bg-gray-100 text-gray-500" 
+                                        readOnly
+                                    />
+                                    <div className="flex justify-end space-x-2">
+                                        <button onClick={()=>setShowSettings(false)} className="px-3 py-2 bg-blue-600 text-white rounded text-sm font-bold">Cerrar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Cabecera */}
                         <div className="max-w-6xl w-full bg-white rounded-xl shadow-lg mb-6 overflow-hidden border-b-4 border-blue-500">
                             <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-6 flex justify-between items-center text-white">
@@ -226,6 +251,9 @@
                                     <img src="logo save.jpg" alt="Logo SAVE" className="h-12 w-auto mr-4 rounded-md object-contain bg-white p-1 shadow-sm" onError={(e)=>{e.target.style.display='none'}} />
                                     <div><h1 className="text-2xl font-bold">Gestion Pedidos tienda SAVE</h1></div>
                                 </div>
+                                <button onClick={handleSettingsClick} className="p-2 hover:bg-white/20 rounded-full transition opacity-50 hover:opacity-100" title="Configuración (Requiere contraseña)">
+                                    <Settings className="h-6 w-6 text-white" />
+                                </button>
                             </div>
                         </div>
 
