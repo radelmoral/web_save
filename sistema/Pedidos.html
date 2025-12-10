@@ -135,6 +135,7 @@
                         observaciones: formData.observaciones,
                         terminalTienda: formData.esTerminalTienda ? 'Sí' : 'No',
                         deposito15: formData.esDeposito15 ? 'Sí' : 'No', 
+                        // Lógica de prioridad: Si hay depósito (o ambos), guardamos factura. Si solo terminal, presupuesto.
                         numeroPresupuesto: (formData.esTerminalTienda && !formData.esDeposito15) ? formData.numeroPresupuesto : '',
                         numeroFactura: formData.esDeposito15 ? formData.numeroFactura : ''
                     };
@@ -224,7 +225,7 @@
                         XLSX.writeFile(wb, fileName);
 
                         setStatusLog("Finalizado.");
-                        alert("✅ ¡PEDIDO ENVIADO!\n\n1. Datos enviados al Servidor.\n2. Copia Excel descargada.");
+                        alert("✅ ¡PEDIDO ENVIADO!\n\n1. Datos enviados al Servidor.\n2. Copia Excel descargada.\n\nIMPORTANTE: Recuerda actualizar el mapeo en n8n para el nuevo campo PVP y el Depósito 15%.");
 
                         if(confirm("¿Deseas limpiar la lista?")) {
                             setItems([]);
@@ -258,6 +259,7 @@
                                             name="url"
                                             defaultValue={currentWebhookUrl} 
                                             className="w-full border p-2 rounded text-sm mb-2 bg-white text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none" 
+                                            // readOnly eliminado para permitir edición
                                         />
                                         <div className="flex justify-between items-center mt-4">
                                             <button type="button" onClick={handleResetConfig} className="text-xs text-blue-500 underline hover:text-blue-700">Restaurar original</button>
@@ -292,7 +294,7 @@
                                     <form onSubmit={handleAddItem} className="space-y-4">
                                         <div>
                                             <label className="block text-xs font-bold text-gray-500 mb-1 ml-1">TIENDA QUE PIDE (ORIGEN)</label>
-                                            <select name="tienda" value={formData.tienda} onChange={(e)=>setFormData({...formData, tienda: e.target.value})} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50 text-blue-900 font-bold">
+                                            <select name="tienda" value={formData.tienda} onChange={(e)=>setFormData({...formData, tienda: e.target.value})} className="w-full border p-2 pl-3 rounded outline-none focus:ring-2 focus:ring-blue-500 transition bg-blue-50 text-blue-900 font-bold appearance-none">
                                                 <option value="">-- Selecciona tu Tienda --</option>
                                                 {TIENDAS.map(t => <option key={t} value={t}>{t}</option>)}
                                             </select>
