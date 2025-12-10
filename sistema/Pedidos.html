@@ -23,6 +23,9 @@
         .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
         .slide-down { transition: all 0.3s ease-out; overflow: hidden; max-height: 0; opacity: 0; }
         .slide-down.open { max-height: 100px; opacity: 1; margin-top: 0.5rem; }
+        /* Toggle Switch */
+        .toggle-checkbox:checked { right: 0; border-color: #68D391; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #68D391; }
     </style>
 </head>
 <body>
@@ -35,8 +38,8 @@
             const { useState, useEffect } = React;
 
             // --- Configuración Fija ---
-            const FIXED_WEBHOOK_URL = "https://n8n-n8n.ajvss9.easypanel.host/webhook/pedidossave";
-            const SETTINGS_PASSWORD = "S@ve2025!"; // CONTRASEÑA ACTUALIZADA
+            const DEFAULT_WEBHOOK_URL = "https://n8n-n8n.ajvss9.easypanel.host/webhook/pedidossave";
+            const SETTINGS_PASSWORD = "S@ve2025!"; 
 
             // --- Listas ---
             const TIENDAS = [
@@ -63,32 +66,51 @@
                 const [showSettings, setShowSettings] = useState(false);
                 const [statusLog, setStatusLog] = useState(""); 
                 
-                // Estado del formulario
+                // Webhook actual (carga de localStorage o usa el por defecto)
+                const [currentWebhookUrl, setCurrentWebhookUrl] = useState(localStorage.getItem('cloud_webhook_url') || DEFAULT_WEBHOOK_URL);
+                
+                // Estado del formulario de pedidos
                 const [formData, setFormData] = useState({ 
-                    tienda: '', 
-                    referencia: '', 
-                    etiqueta: '', 
-                    unidades: '', 
-                    pvpReparacion: '', 
-                    proveedorTipo: '', 
-                    proveedorStockTienda: '', 
-                    observaciones: '',
-                    esTerminalTienda: false,
-                    esDeposito15: false, 
-                    numeroPresupuesto: '',
-                    numeroFactura: ''
+                    tienda: '', referencia: '', etiqueta: '', unidades: '', 
+                    pvpReparacion: '', proveedorTipo: '', proveedorStockTienda: '', 
+                    observaciones: '', esTerminalTienda: false, esDeposito15: false, 
+                    numeroPresupuesto: '', numeroFactura: ''
                 });
 
-                // Nueva función para manejar el acceso a ajustes con contraseña
+                // --- MANEJO DE AJUSTES ---
                 const handleSettingsClick = () => {
                     const password = prompt("Introduce la contraseña de administrador:");
                     if (password === SETTINGS_PASSWORD) {
-                        setShowSettings(true);
-                    } else if (password !== null) { // Si no le dio a cancelar
+                        setShowSettings(true); // Mostrar el panel si la contraseña es correcta
+                    } else if (password !== null) { 
                         alert("Contraseña incorrecta.");
                     }
                 };
 
+                const handleConfigSave = (e) => {
+                    e.preventDefault();
+                    const newUrl = e.target.url.value.trim();
+                    if (newUrl) {
+                        setCurrentWebhookUrl(newUrl);
+                        localStorage.setItem('cloud_webhook_url', newUrl);
+                        setStatusLog("Nueva URL de Webhook guardada.");
+                        alert("✅ Configuración guardada correctamente.");
+                        setShowSettings(false);
+                    } else {
+                        alert("La URL no puede estar vacía.");
+                    }
+                };
+
+                const handleResetConfig = () => {
+                    if(confirm("¿Restaurar la URL original del servidor?")) {
+                        setCurrentWebhookUrl(DEFAULT_WEBHOOK_URL);
+                        localStorage.removeItem('cloud_webhook_url');
+                        alert("Restaurado a la configuración original.");
+                        setShowSettings(false);
+                    }
+                };
+
+                // --- MANEJO DE PEDIDOS ---
                 const handleAddItem = (e) => {
                     e.preventDefault();
                     if (!formData.tienda) return alert("Falta: TIENDA DE ORIGEN.");
@@ -113,7 +135,6 @@
                         observaciones: formData.observaciones,
                         terminalTienda: formData.esTerminalTienda ? 'Sí' : 'No',
                         deposito15: formData.esDeposito15 ? 'Sí' : 'No', 
-                        // Lógica de prioridad: Si hay depósito (o ambos), guardamos factura. Si solo terminal, presupuesto.
                         numeroPresupuesto: (formData.esTerminalTienda && !formData.esDeposito15) ? formData.numeroPresupuesto : '',
                         numeroFactura: formData.esDeposito15 ? formData.numeroFactura : ''
                     };
@@ -160,9 +181,10 @@
                         const payload = getPayload();
                         setStatusLog("Enviando datos al Servidor...");
                         
+                        // Usamos la URL actual del estado (que puede venir de localStorage o default)
                         const form = document.createElement('form');
                         form.method = 'POST';
-                        form.action = FIXED_WEBHOOK_URL;
+                        form.action = currentWebhookUrl; 
                         form.target = 'hidden_iframe'; 
                         form.style.display = 'none';
 
@@ -221,25 +243,30 @@
                 return (
                     <div className="min-h-screen flex flex-col items-center py-10 px-4">
                         
-                        {/* Configuración Oculta */}
+                        {/* Configuración Oculta (Protegida) */}
                         {showSettings && (
                             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                                 <div className="bg-white p-6 rounded-xl shadow-2xl max-w-md w-full">
                                     <h3 className="text-xl font-bold mb-4 flex items-center text-blue-700"><Settings className="mr-2"/> Configuración Protegida</h3>
                                     <div className="text-sm text-gray-600 mb-4 bg-yellow-50 p-3 rounded border border-yellow-200">
                                         <strong>⚠️ Zona de Administrador</strong><br/>
-                                        Aquí puedes cambiar la URL del Webhook si cambia tu servidor.
-                                        La URL actual está fijada en el código, pero puedes sobreescribirla temporalmente aquí si es necesario.
+                                        Puedes cambiar la URL del Webhook si tu servidor cambia.
                                     </div>
-                                    <label className="text-xs font-bold text-gray-600">Webhook URL Actual</label>
-                                    <input 
-                                        defaultValue={FIXED_WEBHOOK_URL} 
-                                        className="w-full border p-2 rounded text-sm mb-4 bg-gray-100 text-gray-500" 
-                                        readOnly
-                                    />
-                                    <div className="flex justify-end space-x-2">
-                                        <button onClick={()=>setShowSettings(false)} className="px-3 py-2 bg-blue-600 text-white rounded text-sm font-bold">Cerrar</button>
-                                    </div>
+                                    <form onSubmit={handleConfigSave}>
+                                        <label className="text-xs font-bold text-gray-600">Webhook URL Actual</label>
+                                        <input 
+                                            name="url"
+                                            defaultValue={currentWebhookUrl} 
+                                            className="w-full border p-2 rounded text-sm mb-2 bg-white text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none" 
+                                        />
+                                        <div className="flex justify-between items-center mt-4">
+                                            <button type="button" onClick={handleResetConfig} className="text-xs text-blue-500 underline hover:text-blue-700">Restaurar original</button>
+                                            <div className="space-x-2">
+                                                <button type="button" onClick={()=>setShowSettings(false)} className="px-3 py-2 bg-gray-200 rounded text-sm font-bold hover:bg-gray-300">Cancelar</button>
+                                                <button type="submit" className="px-3 py-2 bg-blue-600 text-white rounded text-sm font-bold hover:bg-blue-700">Guardar Cambios</button>
+                                            </div>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
                         )}
