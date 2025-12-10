@@ -23,6 +23,9 @@
         .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
         .slide-down { transition: all 0.3s ease-out; overflow: hidden; max-height: 0; opacity: 0; }
         .slide-down.open { max-height: 100px; opacity: 1; margin-top: 0.5rem; }
+        /* Toggle Switch Styles */
+        .toggle-checkbox:checked { right: 0; border-color: #68D391; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #68D391; }
     </style>
 </head>
 <body>
@@ -40,14 +43,14 @@
             // --- Listas ---
             const TIENDAS = [
                 "ECI Alicante", "ECI Bilbao", "ECI Callao", "ECI Castellana", "ECI Diagonal", 
-                "ECI Goya", "ECI Las Palmas", "ECI Malaga", "ECI Mallorca" "ECI Marbella", "ECI Murcia", 
+                "ECI Goya", "ECI Las Palmas", "ECI Malaga", "ECI Mallorca", "ECI Marbella", "ECI Murcia", 
                 "ECI Pamplona", "ECI Plaza Cataluña", "ECI Pozuelo", "ECI Princesa", 
                 "ECI Sanchinarro", "ECI Santander", "ECI Sevilla", "ECI Valencia", 
                 "SAVE El Paseo", "SAVE Fan Mallorca", "SAVE General Ricardos", "SAVE La Sierra", "SaveLab"
             ];
             TIENDAS.sort();
 
-            const PROVEEDORES = ["GSMParts", "Ecommerce", "Stock red", "Precios Adictos"];
+            const PROVEEDORES = ["GSMParts", "Ecommerce", "Stock red"];
 
             // --- Iconos ---
             const Icon = ({ children, className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>;
@@ -71,7 +74,7 @@
                     proveedorStockTienda: '', 
                     observaciones: '',
                     esTerminalTienda: false,
-                    esDeposito30: false,
+                    esDeposito15: false, // Cambiado de 30 a 15
                     numeroPresupuesto: '',
                     numeroFactura: ''
                 });
@@ -84,8 +87,8 @@
                     if (!formData.referencia || !formData.unidades) return alert("Faltan datos del producto.");
                     if (!formData.pvpReparacion) return alert("Falta: PVP Reparación."); // Validación nuevo campo
                     
-                    if (formData.esTerminalTienda && !formData.esDeposito30 && !formData.numeroPresupuesto) return alert("Indica el Nº de Presupuesto.");
-                    if (formData.esDeposito30 && !formData.numeroFactura) return alert("Indica el Nº de Factura.");
+                    if (formData.esTerminalTienda && !formData.esDeposito15 && !formData.numeroPresupuesto) return alert("Indica el Nº de Presupuesto.");
+                    if (formData.esDeposito15 && !formData.numeroFactura) return alert("Indica el Nº de Factura.");
 
                     let proveedorFinal = formData.proveedorTipo === 'Stock red' ? `Stock red - ${formData.proveedorStockTienda}` : formData.proveedorTipo;
 
@@ -99,10 +102,10 @@
                         proveedor: proveedorFinal, 
                         observaciones: formData.observaciones,
                         terminalTienda: formData.esTerminalTienda ? 'Sí' : 'No',
-                        deposito30: formData.esDeposito30 ? 'Sí' : 'No',
+                        deposito15: formData.esDeposito15 ? 'Sí' : 'No', // Cambiado de 30 a 15
                         // Lógica de prioridad: Si hay depósito (o ambos), guardamos factura. Si solo terminal, presupuesto.
-                        numeroPresupuesto: (formData.esTerminalTienda && !formData.esDeposito30) ? formData.numeroPresupuesto : '',
-                        numeroFactura: formData.esDeposito30 ? formData.numeroFactura : ''
+                        numeroPresupuesto: (formData.esTerminalTienda && !formData.esDeposito15) ? formData.numeroPresupuesto : '',
+                        numeroFactura: formData.esDeposito15 ? formData.numeroFactura : ''
                     };
 
                     setItems(prev => [...prev, newItem]);
@@ -110,7 +113,7 @@
                     setFormData(prev => ({ 
                         ...prev, 
                         referencia: '', etiqueta: '', unidades: '', pvpReparacion: '', observaciones: '',
-                        esTerminalTienda: false, esDeposito30: false, numeroPresupuesto: '', numeroFactura: ''
+                        esTerminalTienda: false, esDeposito15: false, numeroPresupuesto: '', numeroFactura: ''
                     }));
                     document.getElementById('referencia').focus();
                 };
@@ -122,7 +125,7 @@
                         if (name === 'terminal') {
                             return { ...prev, esTerminalTienda: !prev.esTerminalTienda };
                         } else if (name === 'deposito') {
-                            return { ...prev, esDeposito30: !prev.esDeposito30 };
+                            return { ...prev, esDeposito15: !prev.esDeposito15 };
                         }
                         return prev;
                     });
@@ -183,7 +186,7 @@
                             "Proveedor": item.proveedor,
                             "Terminal en Tienda": item.terminalTienda,
                             "Nº Presupuesto": item.numeroPresupuesto,
-                            "Depósito 30%": item.deposito30,
+                            "Depósito 15%": item.deposito15, // Cambiado de 30 a 15
                             "Nº Factura": item.numeroFactura,
                             "Observaciones": item.observaciones
                         }));
@@ -197,7 +200,7 @@
                         XLSX.writeFile(wb, fileName);
 
                         setStatusLog("Finalizado.");
-                        alert("✅ ¡PEDIDO ENVIADO!\n\n1. Datos enviados al Servidor.\n2. Copia Excel descargada.\n\nIMPORTANTE: Recuerda actualizar el mapeo en n8n para el nuevo campo PVP.");
+                        alert("✅ ¡PEDIDO ENVIADO!\n\n1. Datos enviados al Servidor.\n2. Copia Excel descargada.\n\nIMPORTANTE: Recuerda actualizar el mapeo en n8n para el nuevo campo PVP y el Depósito 15%.");
 
                         if(confirm("¿Deseas limpiar la lista?")) {
                             setItems([]);
@@ -272,14 +275,14 @@
                                         <div className="bg-indigo-50 p-3 rounded border border-indigo-100 space-y-3">
                                             <div className="flex items-center space-x-4">
                                                 <label className="flex items-center space-x-2 cursor-pointer"><input type="checkbox" checked={formData.esTerminalTienda} onChange={() => handleCheckboxChange('terminal')} className="form-checkbox h-4 w-4 text-blue-600"/><span className="text-xs font-bold text-gray-700">Terminal en tienda</span></label>
-                                                <label className="flex items-center space-x-2 cursor-pointer"><input type="checkbox" checked={formData.esDeposito30} onChange={() => handleCheckboxChange('deposito')} className="form-checkbox h-4 w-4 text-blue-600"/><span className="text-xs font-bold text-gray-700">Depósito 30%</span></label>
+                                                <label className="flex items-center space-x-2 cursor-pointer"><input type="checkbox" checked={formData.esDeposito15} onChange={() => handleCheckboxChange('deposito')} className="form-checkbox h-4 w-4 text-blue-600"/><span className="text-xs font-bold text-gray-700">Depósito 15%</span></label>
                                             </div>
                                             
-                                            <div className={`slide-down ${formData.esTerminalTienda && !formData.esDeposito30 ? 'open' : ''}`}>
+                                            <div className={`slide-down ${formData.esTerminalTienda && !formData.esDeposito15 ? 'open' : ''}`}>
                                                 <input value={formData.numeroPresupuesto} onChange={(e)=>setFormData({...formData, numeroPresupuesto: e.target.value})} className="w-full border p-2 rounded text-sm" placeholder="Nº Presupuesto"/>
                                             </div>
                                             
-                                            <div className={`slide-down ${formData.esDeposito30 ? 'open' : ''}`}>
+                                            <div className={`slide-down ${formData.esDeposito15 ? 'open' : ''}`}>
                                                 <input value={formData.numeroFactura} onChange={(e)=>setFormData({...formData, numeroFactura: e.target.value})} className="w-full border p-2 rounded text-sm" placeholder="Nº Factura"/>
                                             </div>
                                         </div>
@@ -322,7 +325,7 @@
                                                     </td>
                                                     <td className="px-4 py-3 text-xs">
                                                         {item.terminalTienda === 'Sí' && <span className="block mb-1 text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded font-medium">Term. Tienda{item.numeroPresupuesto ? `: ${item.numeroPresupuesto}` : ''}</span>}
-                                                        {item.deposito30 === 'Sí' && <span className="block mb-1 text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded font-medium">Depósito{item.numeroFactura ? `: ${item.numeroFactura}` : ''}</span>}
+                                                        {item.deposito15 === 'Sí' && <span className="block mb-1 text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded font-medium">Depósito 15%{item.numeroFactura ? `: ${item.numeroFactura}` : ''}</span>}
                                                         <span className="text-gray-500 italic truncate block max-w-[150px]" title={item.observaciones}>{item.observaciones || '-'}</span>
                                                     </td>
                                                     <td className="px-4 py-3 text-sm font-bold text-center">{item.unidades}</td>
