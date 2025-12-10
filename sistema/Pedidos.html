@@ -51,7 +51,7 @@
             ];
             TIENDAS.sort();
 
-            const PROVEEDORES = ["GSMParts", "Ecommerce", "Stock red"];
+            const PROVEEDORES = ["GSMParts", "Ecommerce", "Stock red", "PreciosAdictos"];
 
             // --- Iconos ---
             const Icon = ({ children, className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>;
@@ -66,22 +66,29 @@
                 const [showSettings, setShowSettings] = useState(false);
                 const [statusLog, setStatusLog] = useState(""); 
                 
-                // Webhook actual (carga de localStorage o usa el por defecto)
+                // Webhook actual
                 const [currentWebhookUrl, setCurrentWebhookUrl] = useState(localStorage.getItem('cloud_webhook_url') || DEFAULT_WEBHOOK_URL);
                 
-                // Estado del formulario de pedidos
+                // Estado del formulario
                 const [formData, setFormData] = useState({ 
-                    tienda: '', referencia: '', etiqueta: '', unidades: '', 
-                    pvpReparacion: '', proveedorTipo: '', proveedorStockTienda: '', 
-                    observaciones: '', esTerminalTienda: false, esDeposito15: false, 
-                    numeroPresupuesto: '', numeroFactura: ''
+                    tienda: '', 
+                    referencia: '', 
+                    etiqueta: '', 
+                    unidades: '', 
+                    pvpReparacion: '', 
+                    proveedorTipo: '', 
+                    proveedorStockTienda: '', 
+                    observaciones: '',
+                    esTerminalTienda: false,
+                    esDeposito15: false, 
+                    numeroPresupuesto: '',
+                    numeroFactura: ''
                 });
 
-                // --- MANEJO DE AJUSTES ---
                 const handleSettingsClick = () => {
                     const password = prompt("Introduce la contraseña de administrador:");
                     if (password === SETTINGS_PASSWORD) {
-                        setShowSettings(true); // Mostrar el panel si la contraseña es correcta
+                        setShowSettings(true);
                     } else if (password !== null) { 
                         alert("Contraseña incorrecta.");
                     }
@@ -113,14 +120,22 @@
                 // --- MANEJO DE PEDIDOS ---
                 const handleAddItem = (e) => {
                     e.preventDefault();
+                    
+                    // Validaciones Generales
                     if (!formData.tienda) return alert("Falta: TIENDA DE ORIGEN.");
                     if (!formData.proveedorTipo) return alert("Falta: PROVEEDOR.");
                     if (formData.proveedorTipo === 'Stock red' && !formData.proveedorStockTienda) return alert("Falta: Tienda de procedencia del Stock.");
                     if (!formData.referencia || !formData.unidades) return alert("Faltan datos del producto.");
                     if (!formData.pvpReparacion) return alert("Falta: PVP Reparación."); 
                     
-                    if (formData.esTerminalTienda && !formData.esDeposito15 && !formData.numeroPresupuesto) return alert("Indica el Nº de Presupuesto.");
-                    if (formData.esDeposito15 && !formData.numeroFactura) return alert("Indica el Nº de Factura.");
+                    // Validación de Checks OBLIGATORIOS (Al menos uno)
+                    if (!formData.esTerminalTienda && !formData.esDeposito15) {
+                        return alert("⚠️ Debes marcar al menos una opción:\n- Terminal en Tienda\n- Depósito 15%");
+                    }
+
+                    // Validaciones de Campos Condicionales Obligatorios
+                    if (formData.esTerminalTienda && !formData.numeroPresupuesto) return alert("Al marcar 'Terminal en Tienda', el Nº de Presupuesto es OBLIGATORIO.");
+                    if (formData.esDeposito15 && !formData.numeroFactura) return alert("Al marcar 'Depósito 15%', el Nº de Factura es OBLIGATORIO.");
 
                     let proveedorFinal = formData.proveedorTipo === 'Stock red' ? `Stock red - ${formData.proveedorStockTienda}` : formData.proveedorTipo;
 
@@ -135,9 +150,8 @@
                         observaciones: formData.observaciones,
                         terminalTienda: formData.esTerminalTienda ? 'Sí' : 'No',
                         deposito15: formData.esDeposito15 ? 'Sí' : 'No', 
-                        // Lógica de prioridad: Si hay depósito (o ambos), guardamos factura. Si solo terminal, presupuesto.
-                        numeroPresupuesto: (formData.esTerminalTienda && !formData.esDeposito15) ? formData.numeroPresupuesto : '',
-                        numeroFactura: formData.esDeposito15 ? formData.numeroFactura : ''
+                        numeroPresupuesto: formData.numeroPresupuesto,
+                        numeroFactura: formData.numeroFactura
                     };
 
                     setItems(prev => [...prev, newItem]);
@@ -182,7 +196,6 @@
                         const payload = getPayload();
                         setStatusLog("Enviando datos al Servidor...");
                         
-                        // Usamos la URL actual del estado (que puede venir de localStorage o default)
                         const form = document.createElement('form');
                         form.method = 'POST';
                         form.action = currentWebhookUrl; 
@@ -225,7 +238,7 @@
                         XLSX.writeFile(wb, fileName);
 
                         setStatusLog("Finalizado.");
-                        alert("✅ ¡PEDIDO ENVIADO!\n\n1. Datos enviados al Servidor.\n2. Copia Excel descargada.\n\nIMPORTANTE: Recuerda actualizar el mapeo en n8n para el nuevo campo PVP y el Depósito 15%.");
+                        alert("✅ ¡PEDIDO ENVIADO!\n\n1. Datos recibidos por el servidor.\n2. Copia Excel descargada.");
 
                         if(confirm("¿Deseas limpiar la lista?")) {
                             setItems([]);
@@ -259,7 +272,6 @@
                                             name="url"
                                             defaultValue={currentWebhookUrl} 
                                             className="w-full border p-2 rounded text-sm mb-2 bg-white text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none" 
-                                            // readOnly eliminado para permitir edición
                                         />
                                         <div className="flex justify-between items-center mt-4">
                                             <button type="button" onClick={handleResetConfig} className="text-xs text-blue-500 underline hover:text-blue-700">Restaurar original</button>
@@ -292,6 +304,8 @@
                                 <div className="bg-white rounded-xl shadow-md p-6">
                                     <h2 className="font-semibold mb-4 flex items-center text-gray-800"><Plus className="h-5 w-5 mr-2 text-blue-600"/> Añadir Producto</h2>
                                     <form onSubmit={handleAddItem} className="space-y-4">
+                                        
+                                        {/* Tienda */}
                                         <div>
                                             <label className="block text-xs font-bold text-gray-500 mb-1 ml-1">TIENDA QUE PIDE (ORIGEN)</label>
                                             <select name="tienda" value={formData.tienda} onChange={(e)=>setFormData({...formData, tienda: e.target.value})} className="w-full border p-2 pl-3 rounded outline-none focus:ring-2 focus:ring-blue-500 transition bg-blue-50 text-blue-900 font-bold appearance-none">
@@ -300,6 +314,7 @@
                                             </select>
                                         </div>
 
+                                        {/* Proveedor */}
                                         <div className="bg-gray-50 p-3 rounded border border-gray-200">
                                             <label className="block text-xs font-bold text-gray-500 mb-1 ml-1">PROVEEDOR</label>
                                             <select value={formData.proveedorTipo} onChange={(e)=>setFormData({...formData, proveedorTipo: e.target.value, proveedorStockTienda: ''})} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500 bg-white mb-1">
@@ -329,18 +344,24 @@
                                             </div>
                                         </div>
 
-                                        <div className="bg-indigo-50 p-3 rounded border border-indigo-100 space-y-3">
+                                        {/* Zona de Checks Obligatorios */}
+                                        <div className={`p-3 rounded border border-indigo-100 space-y-3 transition duration-300 ${(!formData.esTerminalTienda && !formData.esDeposito15) ? 'bg-red-50 border-red-200' : 'bg-indigo-50 border-indigo-100'}`}>
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-xs font-bold text-gray-500">TIPO (MÍNIMO 1)</label>
+                                                {(!formData.esTerminalTienda && !formData.esDeposito15) && <span className="text-xs text-red-500 font-bold animate-pulse">! Obligatorio</span>}
+                                            </div>
+                                            
                                             <div className="flex items-center space-x-4">
                                                 <label className="flex items-center space-x-2 cursor-pointer"><input type="checkbox" checked={formData.esTerminalTienda} onChange={() => handleCheckboxChange('terminal')} className="form-checkbox h-4 w-4 text-blue-600"/><span className="text-xs font-bold text-gray-700">Terminal en tienda</span></label>
                                                 <label className="flex items-center space-x-2 cursor-pointer"><input type="checkbox" checked={formData.esDeposito15} onChange={() => handleCheckboxChange('deposito')} className="form-checkbox h-4 w-4 text-blue-600"/><span className="text-xs font-bold text-gray-700">Depósito 15%</span></label>
                                             </div>
                                             
-                                            <div className={`slide-down ${formData.esTerminalTienda && !formData.esDeposito15 ? 'open' : ''}`}>
-                                                <input value={formData.numeroPresupuesto} onChange={(e)=>setFormData({...formData, numeroPresupuesto: e.target.value})} className="w-full border p-2 rounded text-sm" placeholder="Nº Presupuesto"/>
+                                            <div className={`slide-down ${formData.esTerminalTienda ? 'open' : ''}`}>
+                                                <input value={formData.numeroPresupuesto} onChange={(e)=>setFormData({...formData, numeroPresupuesto: e.target.value})} className="w-full border p-2 rounded text-sm bg-white focus:ring-2 focus:ring-indigo-500" placeholder="Nº Presupuesto (Requerido)"/>
                                             </div>
                                             
                                             <div className={`slide-down ${formData.esDeposito15 ? 'open' : ''}`}>
-                                                <input value={formData.numeroFactura} onChange={(e)=>setFormData({...formData, numeroFactura: e.target.value})} className="w-full border p-2 rounded text-sm" placeholder="Nº Factura"/>
+                                                <input value={formData.numeroFactura} onChange={(e)=>setFormData({...formData, numeroFactura: e.target.value})} className="w-full border p-2 rounded text-sm bg-white focus:ring-2 focus:ring-indigo-500" placeholder="Nº Factura (Requerido)"/>
                                             </div>
                                         </div>
 
