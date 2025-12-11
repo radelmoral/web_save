@@ -71,10 +71,18 @@
                 
                 // Estado del formulario de pedidos
                 const [formData, setFormData] = useState({ 
-                    tienda: '', referencia: '', etiqueta: '', unidades: '', 
-                    pvpReparacion: '', proveedorTipo: '', proveedorStockTienda: '', 
-                    observaciones: '', esTerminalTienda: false, esDeposito15: false, 
-                    numeroPresupuesto: '', numeroFactura: ''
+                    tienda: '', 
+                    referencia: '', 
+                    etiqueta: '', 
+                    unidades: '', 
+                    pvpReparacion: '', 
+                    proveedorTipo: '', 
+                    proveedorStockTienda: '', 
+                    observaciones: '',
+                    esTerminalTienda: false,
+                    esDeposito15: false, 
+                    numeroPresupuesto: '',
+                    numeroFactura: ''
                 });
 
                 // --- MANEJO DE AJUSTES ---
@@ -135,7 +143,7 @@
                     let proveedorFinal = formData.proveedorTipo === 'Stock red' ? `Stock red - ${formData.proveedorStockTienda}` : formData.proveedorTipo;
 
                     const newItem = {
-                        id: Date.now(),
+                        id: Date.now() + Math.random(), // ID único más robusto
                         tienda: formData.tienda,
                         referencia: formData.referencia,
                         etiqueta: formData.etiqueta,
@@ -151,10 +159,18 @@
 
                     setItems(prev => [...prev, newItem]);
                     
+                    // Limpieza COMPLETA de campos específicos del ítem
                     setFormData(prev => ({ 
                         ...prev, 
-                        referencia: '', etiqueta: '', unidades: '', pvpReparacion: '', observaciones: '',
-                        esTerminalTienda: false, esDeposito15: false, numeroPresupuesto: '', numeroFactura: ''
+                        referencia: '', 
+                        etiqueta: '', 
+                        unidades: '', 
+                        pvpReparacion: '', 
+                        observaciones: '',
+                        esTerminalTienda: false, 
+                        esDeposito15: false, 
+                        numeroPresupuesto: '', 
+                        numeroFactura: ''
                     }));
                     document.getElementById('referencia').focus();
                 };
@@ -191,10 +207,6 @@
                         const payload = getPayload();
                         setStatusLog("Enviando datos al Servidor...");
                         
-                        // Usamos un formulario real para enviar los datos, garantizando que
-                        // el navegador no bloquee la petición por ser cross-origin desde file://.
-                        // Los datos llegarán a n8n dentro del campo 'json_payload'.
-                        
                         const form = document.createElement('form');
                         form.method = 'POST';
                         form.action = currentWebhookUrl; 
@@ -202,7 +214,7 @@
                         form.style.display = 'none';
 
                         const input = document.createElement('input');
-                        input.name = 'json_payload'; // La clave que n8n debe leer
+                        input.name = 'json_payload'; 
                         input.value = JSON.stringify(payload);
                         form.appendChild(input);
 
@@ -214,7 +226,6 @@
 
                         setStatusLog("¡Datos enviados!");
 
-                        // Copia Local Excel
                         setStatusLog("Creando Excel local...");
                         const wsData = items.map(item => ({ 
                             "Tienda Origen": item.tienda,
@@ -231,7 +242,6 @@
                         }));
                         const wb = XLSX.utils.book_new();
                         const ws = XLSX.utils.json_to_sheet(wsData);
-                        // Ajustar columnas
                         ws['!cols'] = [{wch: 20}, {wch: 15}, {wch: 30}, {wch: 8}, {wch: 12}, {wch: 25}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 30}];
                         XLSX.utils.book_append_sheet(wb, ws, "Pedido");
                         
@@ -239,7 +249,7 @@
                         XLSX.writeFile(wb, fileName);
 
                         setStatusLog("Finalizado.");
-                        alert("✅ ¡PEDIDO ENVIADO!\n\n1. Datos enviados al Servidor.\n2. Copia Excel descargada.");
+                        alert("✅ ¡PEDIDO ENVIADO!\n\n1. Datos enviados al Servidor.\n2. Copia Excel descargada.\n\nIMPORTANTE: Recuerda actualizar el mapeo en n8n para el nuevo campo PVP y el Depósito 15%.");
 
                         if(confirm("¿Deseas limpiar la lista?")) {
                             setItems([]);
