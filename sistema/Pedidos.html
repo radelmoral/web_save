@@ -51,7 +51,8 @@
             ];
             TIENDAS.sort();
 
-            const PROVEEDORES = ["Ecommerce", "Stock red", "GSMParts" "PreciosAdictos", "Esmvovil", "Apple"];
+            // Lista de proveedores actualizada y reordenada
+            const PROVEEDORES = ["Ecommerce", "Stock red", "GSMParts", "PreciosAdictos", "Esmovil", "Apple"];
 
             // --- Iconos ---
             const Icon = ({ children, className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>;
@@ -71,10 +72,18 @@
                 
                 // Estado del formulario de pedidos
                 const [formData, setFormData] = useState({ 
-                    tienda: '', referencia: '', etiqueta: '', unidades: '', 
-                    pvpReparacion: '', proveedorTipo: '', proveedorStockTienda: '', 
-                    observaciones: '', esTerminalTienda: false, esDeposito15: false, 
-                    numeroPresupuesto: '', numeroFactura: ''
+                    tienda: '', 
+                    referencia: '', 
+                    etiqueta: '', 
+                    unidades: '', 
+                    pvpReparacion: '', 
+                    proveedorTipo: '', 
+                    proveedorStockTienda: '', 
+                    observaciones: '', 
+                    esTerminalTienda: false, 
+                    esDeposito15: false, 
+                    numeroPresupuesto: '', 
+                    numeroFactura: ''
                 });
 
                 // --- MANEJO DE AJUSTES ---
@@ -110,6 +119,22 @@
                     }
                 };
 
+                // Helper para actualizar form de forma segura
+                const updateForm = (field, value) => {
+                    setFormData(prev => ({ ...prev, [field]: value }));
+                };
+
+                const handleCheckboxChange = (name) => {
+                    setFormData(prev => {
+                        if (name === 'terminal') {
+                            return { ...prev, esTerminalTienda: !prev.esTerminalTienda };
+                        } else if (name === 'deposito') {
+                            return { ...prev, esDeposito15: !prev.esDeposito15 };
+                        }
+                        return prev;
+                    });
+                };
+
                 // --- MANEJO DE PEDIDOS ---
                 const handleAddItem = (e) => {
                     e.preventDefault();
@@ -134,8 +159,9 @@
 
                     let proveedorFinal = formData.proveedorTipo === 'Stock red' ? `Stock red - ${formData.proveedorStockTienda}` : formData.proveedorTipo;
 
+                    // Crear objeto con valores actuales (copia profunda de valores primitivos)
                     const newItem = {
-                        id: Date.now(),
+                        id: Date.now() + Math.random(), // ID único robusto
                         tienda: formData.tienda,
                         referencia: formData.referencia,
                         etiqueta: formData.etiqueta,
@@ -145,32 +171,30 @@
                         observaciones: formData.observaciones,
                         terminalTienda: formData.esTerminalTienda ? 'Sí' : 'No',
                         deposito15: formData.esDeposito15 ? 'Sí' : 'No', 
+                        // Lógica de guardado
                         numeroPresupuesto: (formData.esTerminalTienda && !formData.esDeposito15) ? formData.numeroPresupuesto : '',
                         numeroFactura: formData.esDeposito15 ? formData.numeroFactura : ''
                     };
 
                     setItems(prev => [...prev, newItem]);
                     
+                    // Resetear campos específicos
                     setFormData(prev => ({ 
                         ...prev, 
-                        referencia: '', etiqueta: '', unidades: '', pvpReparacion: '', observaciones: '',
-                        esTerminalTienda: false, esDeposito15: false, numeroPresupuesto: '', numeroFactura: ''
+                        referencia: '', 
+                        etiqueta: '', 
+                        unidades: '', 
+                        pvpReparacion: '', 
+                        observaciones: '',
+                        esTerminalTienda: false, 
+                        esDeposito15: false, 
+                        numeroPresupuesto: '', 
+                        numeroFactura: ''
                     }));
                     document.getElementById('referencia').focus();
                 };
 
                 const handleDeleteItem = (id) => setItems(prev => prev.filter(item => item.id !== id));
-
-                const handleCheckboxChange = (name) => {
-                    setFormData(prev => {
-                        if (name === 'terminal') {
-                            return { ...prev, esTerminalTienda: !prev.esTerminalTienda };
-                        } else if (name === 'deposito') {
-                            return { ...prev, esDeposito15: !prev.esDeposito15 };
-                        }
-                        return prev;
-                    });
-                };
 
                 const getPayload = () => ({
                     fecha_envio: new Date().toLocaleDateString('es-ES'),
@@ -309,7 +333,7 @@
                                         {/* Tienda */}
                                         <div>
                                             <label className="block text-xs font-bold text-gray-500 mb-1 ml-1">TIENDA QUE PIDE (ORIGEN)</label>
-                                            <select name="tienda" value={formData.tienda} onChange={(e)=>setFormData({...formData, tienda: e.target.value})} className="w-full border p-2 pl-3 rounded outline-none focus:ring-2 focus:ring-blue-500 transition bg-blue-50 text-blue-900 font-bold appearance-none">
+                                            <select name="tienda" value={formData.tienda} onChange={(e)=>updateForm('tienda', e.target.value)} className="w-full border p-2 pl-3 rounded outline-none focus:ring-2 focus:ring-blue-500 transition bg-blue-50 text-blue-900 font-bold appearance-none">
                                                 <option value="">-- Selecciona tu Tienda --</option>
                                                 {TIENDAS.map(t => <option key={t} value={t}>{t}</option>)}
                                             </select>
@@ -318,30 +342,30 @@
                                         {/* Proveedor */}
                                         <div className="bg-gray-50 p-3 rounded border border-gray-200">
                                             <label className="block text-xs font-bold text-gray-500 mb-1 ml-1">PROVEEDOR</label>
-                                            <select value={formData.proveedorTipo} onChange={(e)=>setFormData({...formData, proveedorTipo: e.target.value, proveedorStockTienda: ''})} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500 bg-white mb-1">
+                                            <select value={formData.proveedorTipo} onChange={(e)=>setFormData(prev => ({...prev, proveedorTipo: e.target.value, proveedorStockTienda: ''}))} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500 bg-white mb-1">
                                                 <option value="">-- Selecciona Proveedor --</option>
                                                 {PROVEEDORES.map(p => <option key={p} value={p}>{p}</option>)}
                                             </select>
                                             <div className={`slide-down ${formData.proveedorTipo === 'Stock red' ? 'open' : ''}`}>
                                                 <label className="block text-xs font-bold text-red-500 mb-1 ml-1 mt-2">¿De qué tienda viene el stock?</label>
-                                                <select value={formData.proveedorStockTienda} onChange={(e)=>setFormData({...formData, proveedorStockTienda: e.target.value})} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-red-500 bg-white border-red-200">
+                                                <select value={formData.proveedorStockTienda} onChange={(e)=>updateForm('proveedorStockTienda', e.target.value)} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-red-500 bg-white border-red-200">
                                                     <option value="">-- Selecciona Tienda --</option>
                                                     {TIENDAS.map(t => <option key={t} value={t}>{t}</option>)}
                                                 </select>
                                             </div>
                                         </div>
 
-                                        <input name="referencia" value={formData.referencia} onChange={(e)=>setFormData({...formData, referencia: e.target.value})} id="referencia" className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500" placeholder="Referencia" />
-                                        <input name="etiqueta" value={formData.etiqueta} onChange={(e)=>setFormData({...formData, etiqueta: e.target.value})} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500" placeholder="Descripción / Etiqueta" />
+                                        <input value={formData.referencia} onChange={(e)=>updateForm('referencia', e.target.value)} id="referencia" className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500" placeholder="Referencia" />
+                                        <input value={formData.etiqueta} onChange={(e)=>updateForm('etiqueta', e.target.value)} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500" placeholder="Descripción / Etiqueta" />
                                         
                                         <div className="grid grid-cols-2 gap-2">
                                             <div>
                                                 <label className="block text-xs text-gray-500 mb-1 ml-1">Unidades</label>
-                                                <input type="number" name="unidades" value={formData.unidades} onChange={(e)=>setFormData({...formData, unidades: e.target.value})} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500" placeholder="0" />
+                                                <input type="number" value={formData.unidades} onChange={(e)=>updateForm('unidades', e.target.value)} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500" placeholder="0" />
                                             </div>
                                             <div>
                                                 <label className="block text-xs text-gray-500 mb-1 ml-1">PVP Reparación</label>
-                                                <input type="number" name="pvpReparacion" value={formData.pvpReparacion} onChange={(e)=>setFormData({...formData, pvpReparacion: e.target.value})} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00 €" />
+                                                <input type="number" value={formData.pvpReparacion} onChange={(e)=>updateForm('pvpReparacion', e.target.value)} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00 €" />
                                             </div>
                                         </div>
 
@@ -355,18 +379,18 @@
                                             {/* Si ambos están marcados, solo se muestra FACTURA */}
                                             {/* Si solo Terminal marcado -> Presupuesto */}
                                             <div className={`slide-down ${formData.esTerminalTienda && !formData.esDeposito15 ? 'open' : ''}`}>
-                                                <input value={formData.numeroPresupuesto} onChange={(e)=>setFormData({...formData, numeroPresupuesto: e.target.value})} className="w-full border p-2 rounded text-sm bg-white focus:ring-2 focus:ring-indigo-500" placeholder="Nº Presupuesto (Requerido)"/>
+                                                <input value={formData.numeroPresupuesto} onChange={(e)=>updateForm('numeroPresupuesto', e.target.value)} className="w-full border p-2 rounded text-sm bg-white focus:ring-2 focus:ring-indigo-500" placeholder="Nº Presupuesto (Requerido)"/>
                                             </div>
                                             
                                             {/* Si Deposito marcado (aunque terminal tmb lo esté) -> Factura */}
                                             <div className={`slide-down ${formData.esDeposito15 ? 'open' : ''}`}>
-                                                <input value={formData.numeroFactura} onChange={(e)=>setFormData({...formData, numeroFactura: e.target.value})} className="w-full border p-2 rounded text-sm bg-white focus:ring-2 focus:ring-indigo-500" placeholder="Nº Factura (Requerido)"/>
+                                                <input value={formData.numeroFactura} onChange={(e)=>updateForm('numeroFactura', e.target.value)} className="w-full border p-2 rounded text-sm bg-white focus:ring-2 focus:ring-indigo-500" placeholder="Nº Factura (Requerido)"/>
                                             </div>
                                         </div>
 
                                         <div>
                                             <label className="block text-xs font-bold text-gray-500 mb-1 ml-1">OBSERVACIONES</label>
-                                            <textarea value={formData.observaciones} onChange={(e)=>setFormData({...formData, observaciones: e.target.value})} className="w-full border p-2 rounded h-20 text-sm resize-none" placeholder="Notas..."/>
+                                            <textarea value={formData.observaciones} onChange={(e)=>updateForm('observaciones', e.target.value)} className="w-full border p-2 rounded h-20 text-sm resize-none" placeholder="Notas..."/>
                                         </div>
 
                                         <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-bold shadow flex justify-center items-center"><Plus className="mr-2 h-5 w-5"/> Añadir a lista</button>
